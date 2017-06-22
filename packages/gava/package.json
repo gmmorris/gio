@@ -1,0 +1,11 @@
+{
+  "name": "gava",
+  "version": "0.0.1",
+  "description": "AVA bindings for Gio",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "MIT",
+  "author": "Gidi Meir Morris <gidi@gidi.io>"
+}
