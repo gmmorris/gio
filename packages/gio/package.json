@@ -1,6 +1,6 @@
 {
   "name": "gio",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Unit Test Precompilation for better code and better tests",
   "main": "index.js",
   "scripts": {
