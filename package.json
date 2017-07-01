@@ -3,6 +3,8 @@
   "license": "MIT",
   "author": "Gidi Meir Morris <gidi@gidi.io>",
   "devDependencies": {
+    "lerna": "^2.0.0-rc.5",
+    "rimraf": "^2.6.1"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",

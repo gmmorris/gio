@@ -7,5 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "license": "MIT",
-  "author": "Gidi Meir Morris <gidi@gidi.io>"
+  "author": "Gidi Meir Morris <gidi@gidi.io>",
+  "devDependencies": {
+    "jest": "^20.0.4"
+  }
 }
