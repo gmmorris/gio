@@ -4,6 +4,7 @@ const { basename, extname } = require('path')
 const DEFAULTS = {
   pragma: 'gio.stub',
   pragmaExport: 'gio.export',
+  pragmaDefineExport: 'gio.defineExport',
   transformExports: true,
   wrapExports: true
 }
@@ -61,6 +62,7 @@ module.exports = function (babel) {
           const { 
             pragma,
             pragmaExport,
+            pragmaDefineExport,
             transformExports,
             wrapExports
           } = getOptions(state.opts)
@@ -95,7 +97,7 @@ module.exports = function (babel) {
 
                 exportPath.replaceWith(declaration)
                 exportPath.scope.rename(name)
-                exportPath.insertAfter(spiedDefaultExport(pragma)({
+                exportPath.insertAfter(spiedDefaultExport(pragmaDefineExport)({
                   EXPORTED_IDENTIFIER: declaration.id,
                   EXPORT_NAME: t.stringLiteral(name)
                 }))
