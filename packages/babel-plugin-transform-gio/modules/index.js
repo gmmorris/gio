@@ -59,7 +59,9 @@ module.exports = function (babel) {
 
           const hasExports = path
             .get("body")
-            .find(path => path.isExportDefaultDeclaration()) !== undefined
+            .find(path => (
+              path.isExportDefaultDeclaration() || path.isExportDeclaration()
+            )) !== undefined
 
           if (hasExports) {
             path.pushContainer("body", [wrapEreateExport(pragmaExport)()]);
