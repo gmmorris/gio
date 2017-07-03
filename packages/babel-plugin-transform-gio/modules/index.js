@@ -1,22 +1,15 @@
 const template = require('babel-template')
 const { basename, extname } = require('path')
+const { optional, identity } = require('./helpers')
 
 const DEFAULTS = {
   pragma: 'gio.stub',
   pragmaExport: 'gio.export',
   pragmaDefineExport: 'gio.defineExport',
+  pragmaDefineDefaultExport: 'gio.defineDefaultExport',
   transformExports: true,
   wrapExports: true
 }
-
-const identity = i => i
-const optionalTruthy = val => ({
-  map: fn => optionalTruthy(val ? fn(val) : val),
-  orElse: fn => optionalTruthy(val ? val : fn()),
-  get: (fn = identity) => val ? fn(val) : undefined,
-  isEmpty: () => !val,
-  getOrElse: (altVal) => val ? val : altVal
-})
 
 const createOptions = defaults => {
   let calculatedOptions = false
@@ -28,25 +21,43 @@ const createOptions = defaults => {
 }
 
 function getPragmaRoot (pragma) {
-  return optionalTruthy(
+  return optional(
       pragma.match(/^[^\.]+/)
     )
     .map(match => match[0])
     .getOrElse(pragma)
 }
 
-const wrapEreateExport = pragmaExport => template(`
+const wrapCreateExport = pragmaExport => template(`
   ${pragmaExport}(exports);
-`);  
+`);
 
 const spiedDefaultExport = pragma => template(`
-  export default ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER)
-`, {sourceType: 'module'});  
+  const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
+  export default EXPORT_IDENTIFIER;
+`, {sourceType: 'module'});
 
 module.exports = function (babel) {
   const { types: t } = babel;
 
   const getOptions = createOptions(DEFAULTS)
+
+  const renameDefaultExport = (exportPath, pragmaDefineExport) => {
+      const { declaration } = exportPath.node
+      const { name } = declaration.id
+
+      exportPath.replaceWith(declaration)
+      exportPath.scope.rename(name)
+      exportPath.insertAfter(spiedDefaultExport(pragmaDefineExport)({
+        EXPORTED_IDENTIFIER: declaration.id,
+        EXPORT_IDENTIFIER: t.identifier(name),
+        EXPORT_NAME: t.stringLiteral(name)
+      }))
+  }
+
+  const isNamedDecleration = (exportPath) => {
+      return exportPath.node.declaration && exportPath.node.declaration.id
+  }
 
   return {
     pre(state) {
@@ -75,38 +86,30 @@ module.exports = function (babel) {
             .get("body")
             .reduce((state, path) => {
               if(path.isExportDefaultDeclaration()) {
-                state.defaultExport = optionalTruthy(path)
-              }
-              if(path.isExportDeclaration()) {
+                state.defaultExport = optional(path)
+              } else if(path.isExportDeclaration()) {
                 state.exports.push(path)
               }
               return state
             }, {
-              defaultExport: optionalTruthy(),
+              defaultExport: optional(),
               exports: [],
               imports: []
             })
 
-          gioSurvey.hasExports = gioSurvey.exports.length || !!gioSurvey.defaultExport.isEmpty()
+          gioSurvey.hasExports = gioSurvey.exports.length || !gioSurvey.defaultExport.isEmpty()
 
-          if (transformExports) {
-            gioSurvey.defaultExport
-              .get(exportPath => {
-                const { declaration } = exportPath.node
-                const { name } = declaration.id
-
-                exportPath.replaceWith(declaration)
-                exportPath.scope.rename(name)
-                exportPath.insertAfter(spiedDefaultExport(pragmaDefineExport)({
-                  EXPORTED_IDENTIFIER: declaration.id,
-                  EXPORT_NAME: t.stringLiteral(name)
-                }))
-
-              })
-          }
-
-          if (wrapExports && gioSurvey.exports.length) {
-            path.pushContainer("body", [wrapEreateExport(pragmaExport)()]);
+          if (gioSurvey.hasExports) {
+            if(transformExports) {
+              gioSurvey.defaultExport
+                .get(exportPath => {
+                  renameDefaultExport(exportPath, pragmaDefineExport)
+                })
+            }
+            
+            if (wrapExports) {
+              path.pushContainer("body", [wrapCreateExport(pragmaExport)()]);
+            }
           }
         },
       }

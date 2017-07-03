@@ -4,7 +4,9 @@ const babel = require('babel-core')
 const resolve = require('try-resolve')
 const trimEnd = require("lodash/trimEnd")
 
-const { expect } = require('chai')
+const chai = require('chai')
+const { expect } = chai
+// chai.config.showDiff = true
 
 const plugin = require('../modules/index.js')
 
@@ -51,6 +53,7 @@ function getFixtures (fixturesLoc) {
       const tests = fs.readdirSync(filename)
         .filter(taskName => fs.lstatSync(`${filename}/${taskName}`).isDirectory())
         .map(taskName => getTest(fixturesLoc, suiteName, taskName, `${filename}/${taskName}`))
+        .filter(test => !test.options.skip)
 
       return {
         options,
@@ -105,9 +108,9 @@ function testRunner (fixturesLoc, name) {
           )
 
           expect(
-            task.target.code
-          ).to.equal(
             transformedCode
+          ).to.equal(
+            task.target.code
           )
         })
       }
