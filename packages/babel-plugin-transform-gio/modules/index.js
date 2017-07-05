@@ -21,26 +21,24 @@ const createOptions = defaults => {
   }
 }
 
-function getPragmaRoot (pragma) {
-  return optional(
-      pragma.match(/^[^\.]+/)
-    )
+function getPragmaRoot(pragma) {
+  return optional(pragma.match(/^[^\.]+/))
     .map(match => match[0])
     .getOrElse(pragma)
 }
 
-const wrapCreateExport = pragmaExport => template(`
+const wrapCreateExport = pragmaExport =>
+  template(`
   ${pragmaExport}(exports);
 `)
 
-module.exports = function (babel) {
+module.exports = function(babel) {
   const { types: t } = babel
 
   const getOptions = createOptions(DEFAULTS)
 
   return {
-    pre(state) {
-    },
+    pre(state) {},
     visitor: {
       FunctionDeclaration(path, state) {
         const { pragma } = getOptions(state.opts)
@@ -49,7 +47,7 @@ module.exports = function (babel) {
         exit(path, state) {
           const { scope } = path
 
-          const { 
+          const {
             pragma,
             pragmaExport,
             pragmaDefineExport,
@@ -57,39 +55,41 @@ module.exports = function (babel) {
             transformExports,
             wrapExports
           } = getOptions(state.opts)
-          
-          scope.rename(
-            getPragmaRoot(pragma)
-          )
 
-          const gioSurvey = path
-            .get('body')
-            .reduce((state, path) => {
-              if(path.isExportDefaultDeclaration()) {
-                state.defaultExport = optional(path)
-              } else if(path.isExportDeclaration()) {
-                state.exports.push(path)
-              }
-              return state
-            }, {
-              defaultExport: optional(),
-              exports: [],
-              imports: []
-            })
+          scope.rename(getPragmaRoot(pragma))
 
-          gioSurvey.hasExports = gioSurvey.exports.length || !gioSurvey.defaultExport.isEmpty()
+          const gioSurvey = path.get('body').reduce((state, path) => {
+            if (path.isExportDefaultDeclaration()) {
+              state.defaultExport = optional(path)
+            } else if (path.isExportDeclaration()) {
+              state.exports.push(path)
+            }
+            return state
+          }, {
+            defaultExport: optional(),
+            exports: [],
+            imports: []
+          })
+
+          gioSurvey.hasExports =
+            gioSurvey.exports.length || !gioSurvey.defaultExport.isEmpty()
 
           if (gioSurvey.hasExports) {
-            if(transformExports) {
-              gioSurvey.defaultExport
-                .get(exportPath => reassignAndReexportDefaultExport(t, exportPath, pragmaDefineDefaultExport))
+            if (transformExports) {
+              gioSurvey.defaultExport.get(exportPath =>
+                reassignAndReexportDefaultExport(
+                  t,
+                  exportPath,
+                  pragmaDefineDefaultExport
+                )
+              )
             }
 
             if (wrapExports) {
               path.pushContainer('body', [wrapCreateExport(pragmaExport)()])
             }
           }
-        },
+        }
       }
     }
   }

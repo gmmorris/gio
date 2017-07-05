@@ -21,6 +21,6 @@
     "clean": "rimraf ./node_modules && npm i && lerna run clean",
     "updated": "lerna updated",
     "publish": "lerna test && lerna publish",
-    "pretty": "prettier --no-semi  --write --single-quote ./packages/modules/**/*.js "
+    "pretty": "prettier --no-semi  --write --single-quote ./packages/*/modules/**/*.js "
   }
 }
