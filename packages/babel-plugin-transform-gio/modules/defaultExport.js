@@ -3,7 +3,7 @@ const template = require('babel-template')
 const spiedDefaultExport = pragma => template(`
   const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
   export default EXPORT_IDENTIFIER;
-`, {sourceType: 'module'});
+`, {sourceType: 'module'})
 
 const isNamedDecleration = (t, exportPath) => {
     return t.isExportNamedDeclaration(exportPath) || 

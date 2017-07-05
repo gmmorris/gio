@@ -1,0 +1,4 @@
+**/fixtures/**/*.js
+**/lib/*.js
+**/lib/**/*.js
+*.test.js

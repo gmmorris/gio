@@ -3,7 +3,14 @@
   "license": "MIT",
   "author": "Gidi Meir Morris <gidi@gidi.io>",
   "devDependencies": {
+    "babel-eslint": "^7.2.3",
+    "eslint": "^4.1.1",
+    "eslint-config-prettier": "^2.3.0",
+    "eslint-plugin-import": "^2.6.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "lerna": "^2.0.0-rc.5",
+    "prettier": "^1.5.2",
     "rimraf": "^2.6.1"
   },
   "scripts": {
@@ -13,6 +20,7 @@
     "test": "npm run build && lerna run test",
     "clean": "rimraf ./node_modules && npm i && lerna run clean",
     "updated": "lerna updated",
-    "publish": "lerna test && lerna publish"
+    "publish": "lerna test && lerna publish",
+    "pretty": "prettier --no-semi  --write --single-quote ./packages/modules/**/*.js "
   }
 }

@@ -31,10 +31,10 @@ function getPragmaRoot (pragma) {
 
 const wrapCreateExport = pragmaExport => template(`
   ${pragmaExport}(exports);
-`);
+`)
 
 module.exports = function (babel) {
-  const { types: t } = babel;
+  const { types: t } = babel
 
   const getOptions = createOptions(DEFAULTS)
 
@@ -47,7 +47,7 @@ module.exports = function (babel) {
       },
       Program: {
         exit(path, state) {
-          const { scope } = path;
+          const { scope } = path
 
           const { 
             pragma,
@@ -63,7 +63,7 @@ module.exports = function (babel) {
           )
 
           const gioSurvey = path
-            .get("body")
+            .get('body')
             .reduce((state, path) => {
               if(path.isExportDefaultDeclaration()) {
                 state.defaultExport = optional(path)
@@ -86,11 +86,11 @@ module.exports = function (babel) {
             }
 
             if (wrapExports) {
-              path.pushContainer("body", [wrapCreateExport(pragmaExport)()]);
+              path.pushContainer('body', [wrapCreateExport(pragmaExport)()])
             }
           }
         },
       }
     }
-  };
+  }
 }

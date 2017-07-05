@@ -4,11 +4,15 @@
   "description": "Unit Test Precompilation for better code and better tests",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint ./modules/**/*.js"
   },
   "license": "MIT",
   "author": "Gidi Meir Morris <gidi@gidi.io>",
   "devDependencies": {
+    "eslint-plugin-import": "^2.6.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
     "jest": "^20.0.4"
   }
 }
