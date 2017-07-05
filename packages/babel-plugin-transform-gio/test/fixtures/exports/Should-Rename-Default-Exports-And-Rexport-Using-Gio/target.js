@@ -1,5 +1,5 @@
 function _getFileName() {
   return 'Redundant file';
 }
-const getFileName = gio.defineExport('getFileName', _getFileName);
+const getFileName = gio.defineDefaultExport('getFileName', _getFileName);
 export default getFileName;

@@ -1,4 +1,6 @@
-function defaultExport() {
+function _defaultExport() {
   return 'Redundant file';
 }
-export default gio.defineDefaultExport(defaultExport);
+
+const defaultExport = gio.defineDefaultExport('defaultExport', _defaultExport);
+export default defaultExport;

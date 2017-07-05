@@ -1,4 +1,3 @@
 module.exports = {
-  wrapExports: false,
-  skip:true
+  wrapExports: false
 }

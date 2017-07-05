@@ -46,17 +46,54 @@ module.exports = function (babel) {
       const { declaration } = exportPath.node
       const { name } = declaration.id
 
+      const uniqueName = exportPath.scope.generateUidIdentifier(name)
+
       exportPath.replaceWith(declaration)
-      exportPath.scope.rename(name)
+      exportPath.scope.rename(name, uniqueName.name)
+
+      const EXPORTED_IDENTIFIER = declaration.id
+      const EXPORT_IDENTIFIER = t.identifier(name)
+      const EXPORT_NAME = t.stringLiteral(name)
+
       exportPath.insertAfter(spiedDefaultExport(pragmaDefineExport)({
-        EXPORTED_IDENTIFIER: declaration.id,
-        EXPORT_IDENTIFIER: t.identifier(name),
-        EXPORT_NAME: t.stringLiteral(name)
+        EXPORTED_IDENTIFIER,
+        EXPORT_IDENTIFIER,
+        EXPORT_NAME
       }))
   }
 
-  const isNamedDecleration = (exportPath) => {
-      return exportPath.node.declaration && exportPath.node.declaration.id
+  const assignNameToDefaultExport = (exportPath, pragmaDefineExport) => {
+      const { declaration } = exportPath.node
+      const uniqueName = exportPath.scope.generateUidIdentifier('defaultExport')
+
+      exportPath.replaceWith(
+          t.functionDeclaration(
+            uniqueName,
+            declaration.params,
+            declaration.body,
+            declaration.generator,
+            declaration.async
+          )
+      )
+
+      const EXPORTED_IDENTIFIER = uniqueName
+      const EXPORT_IDENTIFIER = t.identifier('defaultExport')
+      const EXPORT_NAME = t.stringLiteral('defaultExport')
+
+      exportPath.insertAfter(spiedDefaultExport(pragmaDefineExport)({
+        EXPORTED_IDENTIFIER,
+        EXPORT_IDENTIFIER,
+        EXPORT_NAME
+      }))
+  }
+
+  const isNamedDecleration = (t, exportPath) => {
+      return t.isExportNamedDeclaration(exportPath) || 
+        (t.isExportDefaultDeclaration(exportPath) && exportPath.node.declaration.id)
+  }
+
+  const isAnonymousDecleration = (t, exportPath) => {
+      return t.isExportDefaultDeclaration(exportPath) && exportPath.node.declaration.id === null
   }
 
   return {
@@ -74,6 +111,7 @@ module.exports = function (babel) {
             pragma,
             pragmaExport,
             pragmaDefineExport,
+            pragmaDefineDefaultExport,
             transformExports,
             wrapExports
           } = getOptions(state.opts)
@@ -102,11 +140,17 @@ module.exports = function (babel) {
           if (gioSurvey.hasExports) {
             if(transformExports) {
               gioSurvey.defaultExport
+                .filter(path => isNamedDecleration(t, path))
+                .get(exportPath => renameDefaultExport(exportPath, pragmaDefineDefaultExport))
+
+              gioSurvey.defaultExport
+                .filter(path => isAnonymousDecleration(t, path))
                 .get(exportPath => {
-                  renameDefaultExport(exportPath, pragmaDefineExport)
+                  assignNameToDefaultExport(exportPath, pragmaDefineDefaultExport)
+                  // renameDefaultExport(exportPath, pragmaDefineDefaultExport)
                 })
             }
-            
+
             if (wrapExports) {
               path.pushContainer("body", [wrapCreateExport(pragmaExport)()]);
             }
