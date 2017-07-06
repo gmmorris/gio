@@ -2,6 +2,7 @@ const template = require('babel-template')
 const { basename, extname } = require('path')
 const { optional, identity } = require('./helpers')
 const reassignAndReexportDefaultExport = require('./defaultExport')
+const surverySource = require('./surveySource')
 
 const DEFAULTS = {
   pragma: 'gio.stub',
@@ -58,18 +59,7 @@ module.exports = function(babel) {
 
           scope.rename(getPragmaRoot(pragma))
 
-          const gioSurvey = path.get('body').reduce((state, path) => {
-            if (path.isExportDefaultDeclaration()) {
-              state.defaultExport = optional(path)
-            } else if (path.isExportDeclaration()) {
-              state.exports.push(path)
-            }
-            return state
-          }, {
-            defaultExport: optional(),
-            exports: [],
-            imports: []
-          })
+          const gioSurvey = surverySource(path)
 
           gioSurvey.hasExports =
             gioSurvey.exports.length || !gioSurvey.defaultExport.isEmpty()
