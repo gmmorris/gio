@@ -3,7 +3,8 @@ const { basename, extname } = require('path')
 const monet = require('monet')
 const { Maybe } = monet
 
-const reassignAndReexportDefaultExport = require('./defaultExport')
+const reassignAndReexportDefaultExport = require('./spyOnExportDefaultDeclaration')
+const reassignAndReexportNamedExport = require('./spyOnExportNamedDeclaration')
 const surverySource = require('./surveySource')
 
 const DEFAULTS = {
@@ -75,6 +76,17 @@ module.exports = function(babel) {
                   pragmaDefineDefaultExport
                 )
               )
+
+              gioSurvey.exports.map(exportPaths => {
+                exportPaths.forEach(exportPath => {
+                  reassignAndReexportNamedExport(
+                    t,
+                    exportPath,
+                    pragmaDefineExport
+                  )
+                })
+                return exportPaths
+              })
             }
 
             if (wrapExports) {
