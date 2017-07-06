@@ -1,15 +1,16 @@
-const { optional, identity } = require('./helpers')
+const monet = require('monet')
+const { Maybe } = monet
 
 module.exports = function(sourceFilePath) {
   return sourceFilePath.get('body').reduce((state, path) => {
     if (path.isExportDefaultDeclaration()) {
-      state.defaultExport = optional(path)
+      state.defaultExport = Maybe.Some(path)
     } else if (path.isExportDeclaration()) {
       state.exports.push(path)
     }
     return state
   }, {
-    defaultExport: optional(),
+    defaultExport: Maybe.None(),
     exports: [],
     imports: []
   })

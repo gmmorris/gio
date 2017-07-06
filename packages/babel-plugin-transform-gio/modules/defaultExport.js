@@ -76,4 +76,5 @@ module.exports = function reassignAndReexportDefaultExport(
     declaration
   )
   exportSpiedDefaultExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+  return exportPath
 }

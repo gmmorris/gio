@@ -1,6 +1,8 @@
 const template = require('babel-template')
 const { basename, extname } = require('path')
-const { optional, identity } = require('./helpers')
+const monet = require('monet')
+const { Maybe } = monet
+
 const reassignAndReexportDefaultExport = require('./defaultExport')
 const surverySource = require('./surveySource')
 
@@ -23,9 +25,9 @@ const createOptions = defaults => {
 }
 
 function getPragmaRoot(pragma) {
-  return optional(pragma.match(/^[^\.]+/))
+  return Maybe.fromNull(pragma.match(/^[^\.]+/))
     .map(match => match[0])
-    .getOrElse(pragma)
+    .orSome(pragma)
 }
 
 const wrapCreateExport = pragmaExport =>
@@ -62,11 +64,11 @@ module.exports = function(babel) {
           const gioSurvey = surverySource(path)
 
           gioSurvey.hasExports =
-            gioSurvey.exports.length || !gioSurvey.defaultExport.isEmpty()
+            gioSurvey.exports.length || gioSurvey.defaultExport.isSome()
 
           if (gioSurvey.hasExports) {
             if (transformExports) {
-              gioSurvey.defaultExport.get(exportPath =>
+              gioSurvey.defaultExport.map(exportPath =>
                 reassignAndReexportDefaultExport(
                   t,
                   exportPath,

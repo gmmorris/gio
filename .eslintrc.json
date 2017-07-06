@@ -8,7 +8,8 @@
       "promise"
   ],
   "env"     : {
-    "node" : true
+    "node" : true,
+    "es6" : true
   },
   "globals" : {
     "Action"       : false,
@@ -19,6 +20,7 @@
     "__BASENAME__" : false
   },
   "rules": {
+    "no-undef" : [2],
     "semi" : [2, "never"],
     "max-len": [2, 150, 2],
     "quotes": [2, "single", { "allowTemplateLiterals": true }],
