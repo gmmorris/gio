@@ -64,7 +64,7 @@ module.exports = function(babel) {
           const gioSurvey = surverySource(path)
 
           gioSurvey.hasExports =
-            gioSurvey.exports.length || gioSurvey.defaultExport.isSome()
+            gioSurvey.exports.isSome() || gioSurvey.defaultExport.isSome()
 
           if (gioSurvey.hasExports) {
             if (transformExports) {
