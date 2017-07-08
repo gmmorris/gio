@@ -22,7 +22,7 @@ const reassignExportToFunctionDeclaration = (
   declaration,
   defineConst
 ) => {
-  exportPath.replaceWith(
+  exportPath.insertAfter(
     t.functionDeclaration(
       uniqueName,
       declaration.params,
@@ -50,7 +50,7 @@ const reassignExportToFunctionExpression = (
       declaration.async
     )
   
-  exportPath.replaceWith(
+  exportPath.insertAfter(
     renamedVariableDeclaration(
       {
         UNIQUE_NAME: uniqueName,
@@ -91,14 +91,18 @@ const getIDAndDeclerationOfFunctionDeclaration = (t, declaration) =>
       )
     : Maybe.None()
 
-const getIDAndDeclerationOfVariableDeclaration = (t, declaration) =>
-  t.isVariableDeclaration(declaration)
+const getIDAndDeclerationOfVariableDeclaration = (t, variableDeclaration) =>
+  t.isVariableDeclaration(variableDeclaration)
     ? Maybe.Some(
-        {
-          id: declaration.declarations[0].id,
-          declaration: declaration.declarations[0].init,
-          definedConst: true
-        }
+        variableDeclaration.declarations.map(
+          declaration => (
+            {
+              id: declaration.id,
+              declaration: declaration.init,
+              definedConst: true
+            }
+          )
+        )        
       )
     : Maybe.None()
 
@@ -115,18 +119,20 @@ module.exports = function reassignAndReexportExport(
 
     if(definedConst) {
       reassignExportToFunctionExpression(
-      t,
-      exportPath,
-      pragmaDefineExport,
-      uniqueName,
-      declaration)
+        t,
+        exportPath,
+        pragmaDefineExport,
+        uniqueName,
+        declaration
+      )
     } else {
       reassignExportToFunctionDeclaration(
-      t,
-      exportPath,
-      pragmaDefineExport,
-      uniqueName,
-      declaration)
+        t,
+        exportPath,
+        pragmaDefineExport,
+        uniqueName,
+        declaration
+      )
     }
 
     exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
@@ -135,9 +141,19 @@ module.exports = function reassignAndReexportExport(
 
   getIDAndDeclerationOfFunctionDeclaration(t, declaration)
     .map(applyReassign)
+    .map(dec => {
+      exportPath.remove()
+      return dec
+    })
 
   getIDAndDeclerationOfVariableDeclaration(t, declaration)
-    .map(applyReassign)
+    .map(declaredVariables => {
+      return declaredVariables.map(applyReassign)
+    })
+    .map(dec => {
+      exportPath.remove()
+      return dec
+    })
 
   return exportPath
 }
