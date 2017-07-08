@@ -22,14 +22,12 @@ const reassignExportToFunctionDeclaration = (
   declaration,
   defineConst
 ) => {
-  exportPath.insertAfter(
-    t.functionDeclaration(
-      uniqueName,
-      declaration.params,
-      declaration.body,
-      declaration.generator,
-      declaration.async
-    )
+  return t.functionDeclaration(
+    uniqueName,
+    declaration.params,
+    declaration.body,
+    declaration.generator,
+    declaration.async
   )
 }
 
@@ -50,13 +48,11 @@ const reassignExportToFunctionExpression = (
       declaration.async
     )
   
-  exportPath.insertAfter(
-    renamedVariableDeclaration(
-      {
-        UNIQUE_NAME: uniqueName,
-        FUNCTION_DECLARATION
-      }
-    )
+  return renamedVariableDeclaration(
+    {
+      UNIQUE_NAME: uniqueName,
+      FUNCTION_DECLARATION
+    }
   )
 }
 
@@ -71,13 +67,11 @@ const exportSpiedExport = (
   const EXPORT_IDENTIFIER = exportName
   const EXPORT_NAME = t.stringLiteral(exportName.name)
 
-  exportPath.insertAfter(
-    spiedExport(pragmaDefineExport)({
-      EXPORTED_IDENTIFIER,
-      EXPORT_IDENTIFIER,
-      EXPORT_NAME
-    })
-  )
+  return spiedExport(pragmaDefineExport)({
+    EXPORTED_IDENTIFIER,
+    EXPORT_IDENTIFIER,
+    EXPORT_NAME
+  })
 }
 
 const getIDAndDeclerationOfFunctionDeclaration = (t, declaration) =>
@@ -117,43 +111,45 @@ module.exports = function reassignAndReexportExport(
     const { id, declaration, definedConst } = dec
     const uniqueName = exportPath.scope.generateUidIdentifier(id.name)
 
-    if(definedConst) {
-      reassignExportToFunctionExpression(
+    return [
+      definedConst
+      ? reassignExportToFunctionExpression(
         t,
         exportPath,
         pragmaDefineExport,
         uniqueName,
         declaration
       )
-    } else {
-      reassignExportToFunctionDeclaration(
+      : reassignExportToFunctionDeclaration(
         t,
         exportPath,
         pragmaDefineExport,
         uniqueName,
         declaration
-      )
-    }
+      ),
+      exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+    ]
+  }
 
-    exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
-    return declaration
+  const insertDeclerationsAndRemoveOriginalDeclaration = declerations => {
+    declerations.forEach(declaration => {
+      exportPath.insertAfter(declaration)
+    })
+    exportPath.remove()
+    return declerations
   }
 
   getIDAndDeclerationOfFunctionDeclaration(t, declaration)
     .map(applyReassign)
-    .map(dec => {
-      exportPath.remove()
-      return dec
-    })
+    .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
   getIDAndDeclerationOfVariableDeclaration(t, declaration)
     .map(declaredVariables => {
-      return declaredVariables.map(applyReassign)
+      return declaredVariables.reduce((declarations, declaration) => {
+        return declarations.concat(applyReassign(declaration))
+      }, [])
     })
-    .map(dec => {
-      exportPath.remove()
-      return dec
-    })
+    .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
   return exportPath
 }
