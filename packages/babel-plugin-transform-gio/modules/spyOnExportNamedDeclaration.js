@@ -82,25 +82,25 @@ const exportSpiedExport = (
 
 const getIDAndDeclerationOfFunctionDeclaration = (t, declaration) =>
   t.isFunctionDeclaration(declaration)
-    ? (
+    ? Maybe.Some(
         {
           id: declaration.id,
           declaration,
           definedConst: false
         }
       )
-    : null
+    : Maybe.None()
 
 const getIDAndDeclerationOfVariableDeclaration = (t, declaration) =>
   t.isVariableDeclaration(declaration)
-    ? (
+    ? Maybe.Some(
         {
           id: declaration.declarations[0].id,
           declaration: declaration.declarations[0].init,
           definedConst: true
         }
       )
-    : null
+    : Maybe.None()
 
 module.exports = function reassignAndReexportExport(
   t,
@@ -128,15 +128,15 @@ module.exports = function reassignAndReexportExport(
       uniqueName,
       declaration)
     }
-    
+
     exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
     return declaration
   }
 
-  Maybe.fromNull(getIDAndDeclerationOfFunctionDeclaration(t, declaration))
+  getIDAndDeclerationOfFunctionDeclaration(t, declaration)
     .map(applyReassign)
 
-  Maybe.fromNull(getIDAndDeclerationOfVariableDeclaration(t, declaration))
+  getIDAndDeclerationOfVariableDeclaration(t, declaration)
     .map(applyReassign)
 
   return exportPath
