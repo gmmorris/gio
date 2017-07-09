@@ -100,6 +100,32 @@ const getIDAndDeclerationOfVariableDeclaration = (t, variableDeclaration) =>
       )
     : Maybe.None()
 
+const mergeExports = (t, declarations) => 
+  t.exportNamedDeclaration(
+    t.variableDeclaration(
+      'const',
+      declarations.map(declaration => {
+        return declaration.declaration.declarations[0]
+      })
+    ),
+    declarations.reduce((specifiers, declaration) => {
+      return specifiers.concat(declaration.specifiers)
+    }, [])
+  )
+
+const mergeVariables = (t, declarations) => 
+  t.variableDeclaration(
+    'const',
+    declarations.map(declaration => {
+      return declaration.declarations[0]
+    })
+  )
+
+const mergeDeclarations = (t, declarations) => [
+  mergeExports(t, declarations.exports),
+  mergeVariables(t, declarations.variables)
+]
+
 module.exports = function reassignAndReexportExport(
   t,
   exportPath,
@@ -146,9 +172,23 @@ module.exports = function reassignAndReexportExport(
   getIDAndDeclerationOfVariableDeclaration(t, declaration)
     .map(declaredVariables => {
       return declaredVariables.reduce((declarations, declaration) => {
-        return declarations.concat(applyReassign(declaration))
-      }, [])
+        const nodes = applyReassign(declaration)
+        return {
+          exports: declarations.exports.concat(
+            nodes.filter(t.isExportNamedDeclaration)
+          ),
+          variables: declarations.variables.concat(
+            nodes.filter(t.isVariableDeclaration)
+          )
+        }
+      }, {
+        exports: [],
+        variables: []
+      })
     })
+    .map(declarations => 
+      mergeDeclarations(t, declarations)
+    )
     .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
   return exportPath

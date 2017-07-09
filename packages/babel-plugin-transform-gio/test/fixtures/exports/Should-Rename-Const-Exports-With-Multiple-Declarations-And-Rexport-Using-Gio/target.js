@@ -2,14 +2,12 @@ function getRelativeFileName() {
   return `./${getFileName()}`;
 }
 
-export const getSecondFileName = gio.defineExport('getSecondFileName', _getSecondFileName);
-
-const _getSecondFileName = function () {
+const _getFileName = function () {
+  return 'Redundant file';
+},
+      _getSecondFileName = function () {
   return 'Second Redundant file';
 };
 
-export const getFileName = gio.defineExport('getFileName', _getFileName);
-
-const _getFileName = function () {
-  return 'Redundant file';
-};
+export const getFileName = gio.defineExport('getFileName', _getFileName),
+      getSecondFileName = gio.defineExport('getSecondFileName', _getSecondFileName);
