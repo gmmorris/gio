@@ -55,9 +55,12 @@ function getFixtures (fixturesLoc) {
         .map(taskName => getTest(fixturesLoc, suiteName, taskName, `${filename}/${taskName}`))
         .filter(test => !test.options.skip)
 
+      
+
       return {
         options,
         tests,
+        only: tests.filter(test => !!test.options.only),
         title: humanize(suiteName),
         filename,
       }
@@ -98,8 +101,23 @@ function getTest(fixturesLoc, suiteName, taskName, taskDir) {
 function testRunner (fixturesLoc, name) {
   const suites = getFixtures(fixturesLoc)
 
-  for (const testSuite of suites) {
-    describe(name + "/" + testSuite.title, function() {
+  const only = suites.reduce((onlySuites, suite) => {
+    return suite.only.length
+      ? onlySuites.concat(
+        [
+          Object.assign(
+            {},
+            suite,
+            { tests: suite.only }
+          )
+        ])
+      : onlySuites
+  }, [])
+
+  const suitesToRun = only.length ? only : suites
+
+  for (const testSuite of suitesToRun) {
+    describe(name + '/' + testSuite.title, function() {
       for (const task of testSuite.tests) {
         it(task.title, () => {
           const { code : transformedCode } = transform(
