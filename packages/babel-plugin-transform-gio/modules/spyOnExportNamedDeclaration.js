@@ -88,16 +88,19 @@ const getIDAndDeclerationOfFunctionDeclaration = (t, declaration) =>
 const getIDAndDeclerationOfVariableDeclaration = (t, variableDeclaration) =>
   t.isVariableDeclaration(variableDeclaration)
     ? Maybe.Some(
-        variableDeclaration.declarations.map(
-          declaration => (
-            {
-              id: declaration.id,
-              declaration: declaration.init,
-              definedConst: true
-            }
-          )
-        )        
+        variableDeclaration.declarations
+          .filter(declaration => t.isFunctionExpression(declaration.init))
+          .map(
+            declaration => (
+              {
+                id: declaration.id,
+                declaration: declaration.init,
+                definedConst: true
+              }
+            )
+          )        
       )
+      .filter(declarations => declarations.length > 0)
     : Maybe.None()
 
 const mergeExports = (t, declarations) => 

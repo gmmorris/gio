@@ -1,4 +1,6 @@
 const template = require('babel-template')
+const monet = require('monet')
+const { Maybe } = monet
 
 const spiedDefaultExport = pragma =>
   template(
@@ -64,17 +66,24 @@ module.exports = function reassignAndReexportDefaultExport(
   exportPath,
   pragmaDefineExport
 ) {
-  const { declaration } = exportPath.node
+  const declaration = Maybe.fromNull(exportPath.node.declaration)
   const id = getIdentifierForDeclaredDefaultExport(t, exportPath)
   const uniqueName = exportPath.scope.generateUidIdentifier(id.name)
 
-  reassignDefaultExport(
-    t,
-    exportPath,
-    pragmaDefineExport,
-    uniqueName,
-    declaration
-  )
-  exportSpiedDefaultExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+
+  declaration
+    .filter(t.isFunctionDeclaration)
+    .map(functionDeclaration => {
+      reassignDefaultExport(
+        t,
+        exportPath,
+        pragmaDefineExport,
+        uniqueName,
+        functionDeclaration
+      )
+      exportSpiedDefaultExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+      return functionDeclaration
+    })
+
   return exportPath
 }
