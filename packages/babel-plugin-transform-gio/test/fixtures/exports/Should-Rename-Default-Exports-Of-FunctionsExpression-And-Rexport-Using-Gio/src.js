@@ -2,7 +2,7 @@ function getRelativeFileName() {
   return `./${getFileName()}`;
 }
 
-function getFileName(named = 'Unnamed') {
+const getFileName = function(named = 'Unnamed') {
   return `Redundant file:${named}`;
 }
 

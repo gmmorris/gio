@@ -72,14 +72,14 @@ function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDe
     })
     .map(({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
       declarationPath.replaceWith(
-          t.functionDeclaration(
-            uniqueName,
-            functionDeclaration.params,
-            functionDeclaration.body,
-            functionDeclaration.generator,
-            functionDeclaration.async
-          )
+        t.functionDeclaration(
+          uniqueName,
+          functionDeclaration.params,
+          functionDeclaration.body,
+          functionDeclaration.generator,
+          functionDeclaration.async
         )
+      )
 
       exportPath.insertAfter(
         createSpiedDefaultExport(t, pragmaDefineExport, uniqueName, identifier)
@@ -91,22 +91,23 @@ function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDe
 
 function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier) {
   return Maybe.Some(exportedIdentifier)
-    .flatMap(identifier => 
+    .flatMap(identifier =>
       Maybe
         .fromNull(findReferencedBindingInScope(exportPath, exportPath.scope))
         .map(binding => ({
           identifier,
           uniqueName: generateUniqueIdentifier(exportPath, identifier),
           declarationPath: binding.path,
-          functionDeclaration: binding.path.node.init
+          functionDeclaration: t.isFunctionDeclaration(binding.path)
+            ? binding.path.node
+            : binding.path.node.init
         })
       )
     )
     .map(({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
-      declarationPath.replaceWith(
-        t.VariableDeclarator(
-          uniqueName,
-          t.functionExpression(
+      if(t.isFunctionDeclaration(declarationPath)) {
+        declarationPath.replaceWith(
+          t.functionDeclaration(
             uniqueName,
             functionDeclaration.params,
             functionDeclaration.body,
@@ -114,7 +115,20 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
             functionDeclaration.async
           )
         )
-      )
+      } else {
+        declarationPath.replaceWith(
+          t.VariableDeclarator(
+            uniqueName,
+            t.functionExpression(
+              uniqueName,
+              functionDeclaration.params,
+              functionDeclaration.body,
+              functionDeclaration.generator,
+              functionDeclaration.async
+            )
+          )
+        )
+      }
 
       exportPath.insertAfter(
         createSpiedDefaultExport(t, pragmaDefineExport, uniqueName, identifier)
