@@ -83,7 +83,8 @@ module.exports = function(babel) {
                   reassignAndReexportNamedExport(
                     t,
                     exportPath,
-                    pragmaDefineExport
+                    pragmaDefineExport,
+                    pragmaDefineDefaultExport
                   )
                 })
                 return exportPaths

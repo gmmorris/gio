@@ -2,7 +2,10 @@ const template = require('babel-template')
 const monet = require('monet')
 const { Maybe } = monet
 
-const { findReferencedBindingInScope } = require('./scope')
+const { 
+  findReferencedIdentifierBindingInScope,
+  generateUniqueIdentifier
+} = require('./scope')
 
 const spiedDefaultExport = pragma =>
   template(
@@ -45,11 +48,6 @@ const createSpiedDefaultExport = (
 function either (left, right) {
   return left.orElse(right)
 }
-
-function generateUniqueIdentifier (exportPath, identifier) {
-  return exportPath.scope.generateUidIdentifier(identifier.name)
-}
-
 function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration) {
   return Maybe.Some(functionDeclaration)
     .map(functionDeclaration => {
@@ -86,7 +84,7 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
   return Maybe.Some(exportedIdentifier)
     .flatMap(identifier =>
       Maybe
-        .fromNull(findReferencedBindingInScope(exportPath, exportPath.scope))
+        .fromNull(findReferencedIdentifierBindingInScope(exportedIdentifier, exportPath.scope))
         .map(binding => ({
           identifier,
           uniqueName: generateUniqueIdentifier(exportPath, identifier),
