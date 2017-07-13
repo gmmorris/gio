@@ -10,7 +10,7 @@ module.exports = function(sourceFilePath) {
   return sourceFilePath.get('body').reduce((state, path) => {
     if (path.isExportDefaultDeclaration()) {
       state.defaultExport = Maybe.Some(path)
-    } else if (path.isExportDeclaration()) {
+    } else if (path.isExportDeclaration() || path.isExportNamedDeclaration()) {
       state.exports = Maybe.Some(push(state.exports.orSome([]), path))
     } else if (path.isImportDeclaration()) {
       state.imports = Maybe.Some(push(state.imports.orSome([]), path))

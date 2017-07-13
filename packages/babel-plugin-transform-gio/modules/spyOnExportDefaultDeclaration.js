@@ -2,6 +2,8 @@ const template = require('babel-template')
 const monet = require('monet')
 const { Maybe } = monet
 
+const { findReferencedBindingInScope } = require('./scope')
+
 const spiedDefaultExport = pragma =>
   template(
     `
@@ -38,15 +40,6 @@ const createSpiedDefaultExport = (
     EXPORT_IDENTIFIER,
     EXPORT_NAME
   })
-}
-
-function findReferencedBindingInScope(exportPath, scope) {
-  return Object.values(scope.bindings)
-    .find(binding =>
-      binding.referencePaths
-        .map(path => path.parentPath)
-        .find(parent => parent === exportPath)
-    )
 }
 
 function either (left, right) {
@@ -146,18 +139,13 @@ module.exports = function reassignAndReexportDefaultExport(
 ) {
   const declaration = Maybe.fromNull(exportPath.node.declaration)
 
-  try {
-    return either(
-      declaration
-        .filter(t.isFunctionDeclaration)
-        .map(functionDeclaration => handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration))
-      ,
-      declaration
-        .filter(t.isIdentifier)
-        .map(exportedIdentifier => handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier))
-    )
-  } catch(e) {
-    console.log(e)
-    throw new Error('Unable to parse default export')
-  }
+  declaration
+    .filter(t.isFunctionDeclaration)
+    .map(functionDeclaration => handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration))
+
+  declaration
+    .filter(t.isIdentifier)
+    .map(exportedIdentifier => handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier))
+
+  return exportPath
 }
