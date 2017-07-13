@@ -281,7 +281,7 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
           }
 
           exportPath.insertBefore(
-            defineSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, identifier, exportName)
+            defineSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, identifier, exportedIdentifier)
           )
 
           return functionDeclaration

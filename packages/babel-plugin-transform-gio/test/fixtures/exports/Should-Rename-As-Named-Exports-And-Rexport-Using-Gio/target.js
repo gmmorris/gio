@@ -6,6 +6,6 @@ const _namedExport = function namedExport() {
   return `this is a constant namedFunctionExpression`;
 };
 
-const defaultExport = gio.defineDefaultExport("namedFunctionExpression", _defaultExport);
-const namedExport = gio.defineExport("namedExport", _namedExport);
+const defaultExport = gio.defineDefaultExport("default", _defaultExport);
+const namedExport = gio.defineExport("named", _namedExport);
 export { defaultExport as default, namedExport as named };
