@@ -258,7 +258,7 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
           if(t.isFunctionDeclaration(declarationPath)) {
             declarationPath.replaceWith(
               t.functionDeclaration(
-                uniqueName,
+                exportName,
                 functionDeclaration.params,
                 functionDeclaration.body,
                 functionDeclaration.generator,
