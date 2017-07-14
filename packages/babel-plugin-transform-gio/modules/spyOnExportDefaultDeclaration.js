@@ -7,6 +7,12 @@ const {
   generateUniqueIdentifier
 } = require('./scope')
 
+const spiedDefaultExpressionExport = pragma =>
+  template(
+    ` export default (${pragma}(EXPORT_NAME, EXPORTED_EXPRESSION));`,
+    { sourceType: 'module' }
+  )
+
 const spiedDefaultExport = pragma =>
   template(
     `
@@ -45,9 +51,25 @@ const createSpiedDefaultExport = (
   })
 }
 
+const createSpiedDefaultExpressionExport = (
+  t,
+  pragmaDefineExport,
+  decleration,
+  exportName
+) => {
+  const EXPORTED_EXPRESSION = decleration
+  const EXPORT_NAME = t.stringLiteral(exportName.name)
+
+  return spiedDefaultExpressionExport(pragmaDefineExport)({
+    EXPORTED_EXPRESSION,
+    EXPORT_NAME
+  })
+}
+
 function either (left, right) {
   return left.orElse(right)
 }
+
 function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration) {
   return Maybe.Some(functionDeclaration)
     .map(functionDeclaration => {
@@ -77,6 +99,23 @@ function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDe
       )
 
       return functionDeclaration
+    })
+}
+
+function handleExportedExpression(t, exportPath, pragmaDefineExport, functionExpression) {
+  return Maybe.Some(functionExpression)
+    .map(functionExpression => {
+      const identifier = getIdentifierForDeclaredDefaultExport(t, exportPath)
+      exportPath.replaceWith(
+        createSpiedDefaultExpressionExport(
+          t,
+          pragmaDefineExport,
+          functionExpression,
+          identifier
+        )
+      )
+
+      return functionExpression
     })
 }
 
@@ -140,6 +179,10 @@ module.exports = function reassignAndReexportDefaultExport(
   declaration
     .filter(t.isFunctionDeclaration)
     .map(functionDeclaration => handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration))
+
+  declaration
+    .filter(t.isFunctionExpression)
+    .map(functionExpression => handleExportedExpression(t, exportPath, pragmaDefineExport, functionExpression))
 
   declaration
     .filter(t.isIdentifier)
