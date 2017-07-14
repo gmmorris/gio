@@ -255,9 +255,10 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
                 .fromNull(functionDeclaration.id)
                 .orSome(uniqueName)
 
-          if(t.isFunctionDeclaration(declarationPath)) {
-            declarationPath.replaceWith(
-              t.functionDeclaration(
+          declarationPath.replaceWith(
+            t.VariableDeclarator(
+              uniqueName,
+              t.functionExpression(
                 exportName,
                 functionDeclaration.params,
                 functionDeclaration.body,
@@ -265,20 +266,7 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
                 functionDeclaration.async
               )
             )
-          } else {
-            declarationPath.replaceWith(
-              t.VariableDeclarator(
-                uniqueName,
-                t.functionExpression(
-                  exportName,
-                  functionDeclaration.params,
-                  functionDeclaration.body,
-                  functionDeclaration.generator,
-                  functionDeclaration.async
-                )
-              )
-            )
-          }
+          )
 
           exportPath.insertBefore(
             defineSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, identifier, exportedIdentifier)
@@ -295,7 +283,6 @@ function isDefaultIdentifier(id) {
 }
 
 function handleExportedSpecifiers(t, specifiers, exportPath, pragmaDefineExport, pragmaDefineDefaultExport) {
-  debugger;
 
   specifiers.map(({ exported, local }) => {
     handleExportedIdentifier(
