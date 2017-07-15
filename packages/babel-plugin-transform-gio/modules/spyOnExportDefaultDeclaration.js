@@ -65,10 +65,6 @@ const createSpiedDefaultExpressionExport = (
   })
 }
 
-function either(left, right) {
-  return left.orElse(right)
-}
-
 function handleExportedDeclaration(
   t,
   exportPath,
