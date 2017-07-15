@@ -21,6 +21,7 @@
     "__BASENAME__" : false
   },
   "rules": {
+    "no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }],
     "no-undef" : [2],
     "semi" : [2, "never"],
     "max-len": [2, 150, 2],
