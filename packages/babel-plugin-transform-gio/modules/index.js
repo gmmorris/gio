@@ -94,7 +94,6 @@ module.exports = function(babel) {
                       pragmaDefineDefaultExport
                     )                    
                   }
-
                 })
                 return exportPaths
               })

@@ -23,11 +23,19 @@ function transform(code, opts = {}) {
 
 function readFile(filename) {
   if (fs.existsSync(filename)) {
-    let file = trimEnd(fs.readFileSync(filename, "utf8"));
-    file = file.replace(/\r\n/g, "\n");
-    return file;
+    let file = trimEnd(fs.readFileSync(filename, "utf8"))
+    file = file.replace(/\r\n/g, "\n")
+    return file
   } else {
     throw new Error(`couldnt read fixture: ${filename}`)
+  }
+}
+
+function writeSnapshot(filename, src) {
+  try {
+    fs.writeFileSync(filename, src)
+  } catch(e) {
+    console.log('Failed to write Snapshot')
   }
 }
 
@@ -69,10 +77,11 @@ function getFixtures (fixturesLoc) {
 
 
 function getTest(fixturesLoc, suiteName, taskName, taskDir) {
-  const srcAlias = suiteName + "/" + taskName + "/src.js"
-  const targetAlias = suiteName + "/" + taskName + "/target.js"
-  const src = suiteName + "/" + taskName + "/src.js"
-  const target = suiteName + "/" + taskName + "/target.js"
+  const srcAlias = `${suiteName}/${taskName}/src.js`
+  const targetAlias = `${suiteName}/${taskName}/target.js`
+  const src = `${suiteName}/${taskName}/src.js`
+  const target = `${suiteName}/${taskName}/target.js`
+  const targetSnapshot = `${suiteName}/${taskName}/snapshot.js`
     
   const taskOptsLoc = resolve(`${fixturesLoc}/${suiteName}/${taskName}/options.js`)
 
@@ -89,6 +98,9 @@ function getTest(fixturesLoc, suiteName, taskName, taskDir) {
       code: readFile(`${fixturesLoc}/${target}`),
       filename: targetAlias,
     },
+    snapshot: {
+      filename: `${fixturesLoc}/${targetSnapshot}`
+    }
   }
 
   if (taskOptsLoc){
@@ -125,11 +137,17 @@ function testRunner (fixturesLoc, name) {
             Object.assign({}, testSuite.options, task.options)
           )
 
-          expect(
-            transformedCode
-          ).to.equal(
-            task.target.code
-          )
+          try { 
+            expect(
+              transformedCode
+            ).to.equal(
+              task.target.code
+            )
+          } catch(e) {
+            // test failed, write snapshot
+            writeSnapshot(task.snapshot.filename, transformedCode)
+            throw e
+          }
         })
       }
     })
