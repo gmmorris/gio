@@ -4,4 +4,4 @@ export function getFileName() {
 export default function getDefaultFileName() {
   return 'Default Redundant file';
 }
-gio.exports(exports);
+gio.exports(module.exports);

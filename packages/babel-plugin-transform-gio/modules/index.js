@@ -33,7 +33,7 @@ function getPragmaRoot(pragma) {
 
 const wrapCreateExport = pragmaExport =>
   template(`
-  ${pragmaExport}(exports);
+  ${pragmaExport}(module.exports);
 `)
 
 module.exports = function(babel) {
