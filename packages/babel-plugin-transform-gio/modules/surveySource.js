@@ -11,9 +11,9 @@ module.exports = function(sourceFilePath) {
     if (path.isExportDefaultDeclaration()) {
       state.defaultExport = Maybe.Some(path)
     } else if (path.isExportDeclaration() || path.isExportNamedDeclaration()) {
-      state.exports = Maybe.Some(push(state.exports.orSome([]), path))
+      state.exports = state.exports.orElse(Maybe.Some([])).map(arr => push(arr, path))
     } else if (path.isImportDeclaration()) {
-      state.imports = Maybe.Some(push(state.imports.orSome([]), path))
+      state.imports = state.imports.orElse(Maybe.Some([])).map(arr => push(arr, path))
     }
     return state
   }, {

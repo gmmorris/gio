@@ -1,5 +1,4 @@
 const template = require('babel-template')
-const { basename, extname } = require('path')
 const monet = require('monet')
 const { Maybe } = monet
 
@@ -43,11 +42,8 @@ module.exports = function(babel) {
   const getOptions = createOptions(DEFAULTS)
 
   return {
-    pre(state) {},
+    pre() {},
     visitor: {
-      FunctionDeclaration(path, state) {
-        const { pragma } = getOptions(state.opts)
-      },
       Program: {
         exit(path, state) {
           const { scope } = path
