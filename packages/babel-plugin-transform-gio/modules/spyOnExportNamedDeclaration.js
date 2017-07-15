@@ -2,13 +2,13 @@ const template = require('babel-template')
 const monet = require('monet')
 const { Maybe } = monet
 
-const { 
+const {
   findReferencedIdentifierBindingInScope,
   generateUniqueIdentifier
 } = require('./scope')
 
 const spiedDefinition = pragma =>
-    template(
+  template(
     `
     const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
     `,
@@ -16,7 +16,7 @@ const spiedDefinition = pragma =>
   )
 
 const spiedExport = pragma =>
-    template(
+  template(
     `
     export const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
     `,
@@ -52,21 +52,18 @@ const reassignExportToFunctionExpression = (
   declaration,
   defineConst
 ) => {
-  const FUNCTION_DECLARATION =
-    t.functionExpression(
-      null,
-      declaration.params,
-      declaration.body,
-      declaration.generator,
-      declaration.async
-    )
-  
-  return renamedVariableDeclaration(
-    {
-      UNIQUE_NAME: uniqueName,
-      FUNCTION_DECLARATION
-    }
+  const FUNCTION_DECLARATION = t.functionExpression(
+    null,
+    declaration.params,
+    declaration.body,
+    declaration.generator,
+    declaration.async
   )
+
+  return renamedVariableDeclaration({
+    UNIQUE_NAME: uniqueName,
+    FUNCTION_DECLARATION
+  })
 }
 
 const exportSpiedExport = (
@@ -109,12 +106,10 @@ const defineSpiedExport = (
 
 const isExportedFunctionDeclaration = (t, declaration) =>
   t.isFunctionDeclaration(declaration)
-    ? Maybe.Some(
-        {
-          id: declaration.id,
-          declaration
-        }
-      )
+    ? Maybe.Some({
+        id: declaration.id,
+        declaration
+      })
     : Maybe.None()
 
 const isExportedExpressions = (t, variableDeclaration) =>
@@ -122,19 +117,14 @@ const isExportedExpressions = (t, variableDeclaration) =>
     ? Maybe.Some(
         variableDeclaration.declarations
           .filter(declaration => t.isFunctionExpression(declaration.init))
-          .map(
-            declaration => (
-              {
-                id: declaration.id,
-                declaration: declaration.init
-              }
-            )
-          )        
-      )
-      .filter(declarations => declarations.length > 0)
+          .map(declaration => ({
+            id: declaration.id,
+            declaration: declaration.init
+          }))
+      ).filter(declarations => declarations.length > 0)
     : Maybe.None()
 
-const mergeExports = (t, declarations, kind) => 
+const mergeExports = (t, declarations, kind) =>
   t.exportNamedDeclaration(
     t.variableDeclaration(
       kind,
@@ -142,20 +132,15 @@ const mergeExports = (t, declarations, kind) =>
         return declaration.declaration.declarations[0]
       })
     ),
-    declarations.reduce(
-      (specifiers, declaration) => {
-        return specifiers.concat(declaration.specifiers)
-      },
-      []
-    )
+    declarations.reduce((specifiers, declaration) => {
+      return specifiers.concat(declaration.specifiers)
+    }, [])
   )
 
-const mergeVariables = (t, declarations, kind) => 
+const mergeVariables = (t, declarations, kind) =>
   t.variableDeclaration(
     kind,
-    declarations.map(declaration =>
-      declaration.declarations[0]
-    )
+    declarations.map(declaration => declaration.declarations[0])
   )
 
 const mergeDeclarations = (t, declarations, kind) => [
@@ -194,7 +179,12 @@ const applyReassignExpression = (t, dec, exportPath, pragmaDefineExport) => {
   ]
 }
 
-function handleExportedDeclaration (t, declaration, exportPath, pragmaDefineExport) {
+function handleExportedDeclaration(
+  t,
+  declaration,
+  exportPath,
+  pragmaDefineExport
+) {
   const insertDeclerationsAndRemoveOriginalDeclaration = declerations => {
     declerations.forEach(declaration => {
       exportPath.insertAfter(declaration)
@@ -204,56 +194,66 @@ function handleExportedDeclaration (t, declaration, exportPath, pragmaDefineExpo
   }
 
   isExportedFunctionDeclaration(t, declaration)
-    .map(declaration => applyReassignDeclaration(t, declaration, exportPath, pragmaDefineExport))
+    .map(declaration =>
+      applyReassignDeclaration(t, declaration, exportPath, pragmaDefineExport)
+    )
     .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
   isExportedExpressions(t, declaration)
     .map(declaredVariables => {
-      return declaredVariables.reduce((declarations, declaration) => {
-        const nodes = applyReassignExpression(t, declaration, exportPath, pragmaDefineExport)
-        return {
-          exports: declarations.exports.concat(
-            nodes.filter(t.isExportNamedDeclaration)
-          ),
-          variables: declarations.variables.concat(
-            nodes.filter(t.isVariableDeclaration)
+      return declaredVariables.reduce(
+        (declarations, declaration) => {
+          const nodes = applyReassignExpression(
+            t,
+            declaration,
+            exportPath,
+            pragmaDefineExport
           )
+          return {
+            exports: declarations.exports.concat(
+              nodes.filter(t.isExportNamedDeclaration)
+            ),
+            variables: declarations.variables.concat(
+              nodes.filter(t.isVariableDeclaration)
+            )
+          }
+        },
+        {
+          exports: [],
+          variables: []
         }
-      }, {
-        exports: [],
-        variables: []
-      })
+      )
     })
-    .map(declarations => 
-      mergeDeclarations(t, declarations, declaration.kind)
-    )
+    .map(declarations => mergeDeclarations(t, declarations, declaration.kind))
     .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
   return declaration
 }
 
-
-function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier, exportedLocalIdentifier) {
-  return Maybe.Some(exportedLocalIdentifier)
-    .flatMap(identifier =>
-      Maybe
-        .fromNull(findReferencedIdentifierBindingInScope(identifier, exportPath.scope))
-        .map(binding => (
-          {
-            identifier,
-            uniqueName: generateUniqueIdentifier(exportPath, identifier),
-            declarationPath: binding.path,
-            functionDeclaration: t.isFunctionDeclaration(binding.path)
-              ? binding.path.node
-              : binding.path.node.init
-          }
-        ))
-        .map(({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
+function handleExportedIdentifier(
+  t,
+  exportPath,
+  pragmaDefineExport,
+  exportedIdentifier,
+  exportedLocalIdentifier
+) {
+  return Maybe.Some(exportedLocalIdentifier).flatMap(identifier =>
+    Maybe.fromNull(
+      findReferencedIdentifierBindingInScope(identifier, exportPath.scope)
+    )
+      .map(binding => ({
+        identifier,
+        uniqueName: generateUniqueIdentifier(exportPath, identifier),
+        declarationPath: binding.path,
+        functionDeclaration: t.isFunctionDeclaration(binding.path)
+          ? binding.path.node
+          : binding.path.node.init
+      }))
+      .map(
+        ({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
           const exportName = t.isFunctionDeclaration(declarationPath)
             ? uniqueName
-            : Maybe
-                .fromNull(functionDeclaration.id)
-                .orSome(uniqueName)
+            : Maybe.fromNull(functionDeclaration.id).orSome(uniqueName)
 
           declarationPath.replaceWith(
             t.VariableDeclarator(
@@ -269,21 +269,33 @@ function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIde
           )
 
           exportPath.insertBefore(
-            defineSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, identifier, exportedIdentifier)
+            defineSpiedExport(
+              t,
+              exportPath,
+              pragmaDefineExport,
+              uniqueName,
+              identifier,
+              exportedIdentifier
+            )
           )
 
           return functionDeclaration
-        })
-    )
-      
+        }
+      )
+  )
 }
 
 function isDefaultIdentifier(id) {
   return id && id.name === 'default'
 }
 
-function handleExportedSpecifiers(t, specifiers, exportPath, pragmaDefineExport, pragmaDefineDefaultExport) {
-
+function handleExportedSpecifiers(
+  t,
+  specifiers,
+  exportPath,
+  pragmaDefineExport,
+  pragmaDefineDefaultExport
+) {
   specifiers.map(({ exported, local }) => {
     handleExportedIdentifier(
       t,
@@ -292,7 +304,7 @@ function handleExportedSpecifiers(t, specifiers, exportPath, pragmaDefineExport,
         ? pragmaDefineDefaultExport
         : pragmaDefineExport,
       exported,
-      local,
+      local
     )
   })
 
@@ -307,12 +319,26 @@ module.exports = function reassignAndReexportExport(
 ) {
   return Maybe.fromNull(exportPath.node)
     .map(node => {
-      Maybe.fromNull(node.declaration)
-        .map(declaration => handleExportedDeclaration (t, declaration, exportPath, pragmaDefineExport))
-      
+      Maybe.fromNull(node.declaration).map(declaration =>
+        handleExportedDeclaration(
+          t,
+          declaration,
+          exportPath,
+          pragmaDefineExport
+        )
+      )
+
       Maybe.fromNull(node.specifiers)
         .filter(specifiers => specifiers.length)
-        .map(specifiers => handleExportedSpecifiers (t, specifiers, exportPath, pragmaDefineExport, pragmaDefineDefaultExport))
+        .map(specifiers =>
+          handleExportedSpecifiers(
+            t,
+            specifiers,
+            exportPath,
+            pragmaDefineExport,
+            pragmaDefineDefaultExport
+          )
+        )
 
       return exportPath
     })

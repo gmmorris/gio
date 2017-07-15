@@ -2,16 +2,15 @@ const template = require('babel-template')
 const monet = require('monet')
 const { Maybe } = monet
 
-const { 
+const {
   findReferencedIdentifierBindingInScope,
   generateUniqueIdentifier
 } = require('./scope')
 
 const spiedDefaultExpressionExport = pragma =>
-  template(
-    ` export default (${pragma}(EXPORT_NAME, EXPORTED_EXPRESSION));`,
-    { sourceType: 'module' }
-  )
+  template(` export default (${pragma}(EXPORT_NAME, EXPORTED_EXPRESSION));`, {
+    sourceType: 'module'
+  })
 
 const spiedDefaultExport = pragma =>
   template(
@@ -66,22 +65,25 @@ const createSpiedDefaultExpressionExport = (
   })
 }
 
-function either (left, right) {
+function either(left, right) {
   return left.orElse(right)
 }
 
-function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration) {
+function handleExportedDeclaration(
+  t,
+  exportPath,
+  pragmaDefineExport,
+  functionDeclaration
+) {
   return Maybe.Some(functionDeclaration)
     .map(functionDeclaration => {
       const identifier = getIdentifierForDeclaredDefaultExport(t, exportPath)
-      return (
-        {
-          identifier,
-          uniqueName: generateUniqueIdentifier(exportPath, identifier),
-          declarationPath: exportPath,
-          functionDeclaration,
-        }
-      )
+      return {
+        identifier,
+        uniqueName: generateUniqueIdentifier(exportPath, identifier),
+        declarationPath: exportPath,
+        functionDeclaration
+      }
     })
     .map(({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
       declarationPath.replaceWith(
@@ -102,40 +104,51 @@ function handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDe
     })
 }
 
-function handleExportedExpression(t, exportPath, pragmaDefineExport, functionExpression) {
-  return Maybe.Some(functionExpression)
-    .map(functionExpression => {
-      const identifier = getIdentifierForDeclaredDefaultExport(t, exportPath)
-      exportPath.replaceWith(
-        createSpiedDefaultExpressionExport(
-          t,
-          pragmaDefineExport,
-          functionExpression,
-          identifier
-        )
-      )
-
-      return functionExpression
-    })
-}
-
-function handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier) {
-  return Maybe.Some(exportedIdentifier)
-    .flatMap(identifier =>
-      Maybe
-        .fromNull(findReferencedIdentifierBindingInScope(exportedIdentifier, exportPath.scope))
-        .map(binding => ({
-          identifier,
-          uniqueName: generateUniqueIdentifier(exportPath, identifier),
-          declarationPath: binding.path,
-          functionDeclaration: t.isFunctionDeclaration(binding.path)
-            ? binding.path.node
-            : binding.path.node.init
-        })
+function handleExportedExpression(
+  t,
+  exportPath,
+  pragmaDefineExport,
+  functionExpression
+) {
+  return Maybe.Some(functionExpression).map(functionExpression => {
+    const identifier = getIdentifierForDeclaredDefaultExport(t, exportPath)
+    exportPath.replaceWith(
+      createSpiedDefaultExpressionExport(
+        t,
+        pragmaDefineExport,
+        functionExpression,
+        identifier
       )
     )
+
+    return functionExpression
+  })
+}
+
+function handleExportedIdentifier(
+  t,
+  exportPath,
+  pragmaDefineExport,
+  exportedIdentifier
+) {
+  return Maybe.Some(exportedIdentifier)
+    .flatMap(identifier =>
+      Maybe.fromNull(
+        findReferencedIdentifierBindingInScope(
+          exportedIdentifier,
+          exportPath.scope
+        )
+      ).map(binding => ({
+        identifier,
+        uniqueName: generateUniqueIdentifier(exportPath, identifier),
+        declarationPath: binding.path,
+        functionDeclaration: t.isFunctionDeclaration(binding.path)
+          ? binding.path.node
+          : binding.path.node.init
+      }))
+    )
     .map(({ identifier, declarationPath, functionDeclaration, uniqueName }) => {
-      if(t.isFunctionDeclaration(declarationPath)) {
+      if (t.isFunctionDeclaration(declarationPath)) {
         declarationPath.replaceWith(
           t.functionDeclaration(
             uniqueName,
@@ -178,15 +191,36 @@ module.exports = function reassignAndReexportDefaultExport(
 
   declaration
     .filter(t.isFunctionDeclaration)
-    .map(functionDeclaration => handleExportedDeclaration(t, exportPath, pragmaDefineExport, functionDeclaration))
+    .map(functionDeclaration =>
+      handleExportedDeclaration(
+        t,
+        exportPath,
+        pragmaDefineExport,
+        functionDeclaration
+      )
+    )
 
   declaration
     .filter(t.isFunctionExpression)
-    .map(functionExpression => handleExportedExpression(t, exportPath, pragmaDefineExport, functionExpression))
+    .map(functionExpression =>
+      handleExportedExpression(
+        t,
+        exportPath,
+        pragmaDefineExport,
+        functionExpression
+      )
+    )
 
   declaration
     .filter(t.isIdentifier)
-    .map(exportedIdentifier => handleExportedIdentifier(t, exportPath, pragmaDefineExport, exportedIdentifier))
+    .map(exportedIdentifier =>
+      handleExportedIdentifier(
+        t,
+        exportPath,
+        pragmaDefineExport,
+        exportedIdentifier
+      )
+    )
 
   return exportPath
 }

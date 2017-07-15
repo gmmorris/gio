@@ -69,14 +69,13 @@ module.exports = function(babel) {
 
           if (gioSurvey.hasExports) {
             if (transformExports) {
-              gioSurvey.defaultExport
-                .map(exportPath =>
-                  reassignAndReexportDefaultExport(
-                    t,
-                    exportPath,
-                    pragmaDefineDefaultExport
-                  )
+              gioSurvey.defaultExport.map(exportPath =>
+                reassignAndReexportDefaultExport(
+                  t,
+                  exportPath,
+                  pragmaDefineDefaultExport
                 )
+              )
 
               gioSurvey.exports.map(exportPaths => {
                 exportPaths.forEach(exportPath => {
