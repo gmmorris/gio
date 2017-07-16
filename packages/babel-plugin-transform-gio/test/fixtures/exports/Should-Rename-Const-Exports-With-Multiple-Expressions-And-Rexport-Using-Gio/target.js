@@ -9,5 +9,5 @@ const _getFileName = function (named = 'Unnamed') {
   return 'Second Redundant file';
 };
 
-export const getFileName = gio.defineExport('getFileName', _getFileName),
-      getSecondFileName = gio.defineExport('getSecondFileName', _getSecondFileName);
+export const getFileName = gio.defineExport(0, 'getFileName', _getFileName),
+      getSecondFileName = gio.defineExport(1, 'getSecondFileName', _getSecondFileName);

@@ -10,7 +10,7 @@ const {
 const spiedDefinition = pragma =>
   template(
     `
-    const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
+    const EXPORT_IDENTIFIER = ${pragma}(EXPORT_ID, EXPORT_NAME, EXPORTED_IDENTIFIER);
     `,
     { sourceType: 'module' }
   )
@@ -19,6 +19,7 @@ const defineSpiedExport = (
   t,
   exportPath,
   pragmaDefineExport,
+  id,
   uniqueName,
   exportIdentifier,
   exportName = exportIdentifier
@@ -26,11 +27,13 @@ const defineSpiedExport = (
   const EXPORTED_IDENTIFIER = uniqueName
   const EXPORT_IDENTIFIER = exportIdentifier
   const EXPORT_NAME = t.stringLiteral(exportName.name)
+  const EXPORT_ID = t.numericLiteral(id)
 
   return spiedDefinition(pragmaDefineExport)({
     EXPORTED_IDENTIFIER,
     EXPORT_IDENTIFIER,
-    EXPORT_NAME
+    EXPORT_NAME,
+    EXPORT_ID
   })
 }
 
@@ -39,7 +42,8 @@ function handleExportedIdentifier(
   exportPath,
   pragmaDefineExport,
   exportedIdentifier,
-  exportedLocalIdentifier
+  exportedLocalIdentifier,
+  generateExportId
 ) {
   return Maybe.Some(exportedLocalIdentifier).flatMap(identifier =>
     Maybe.fromNull(
@@ -77,6 +81,7 @@ function handleExportedIdentifier(
               t,
               exportPath,
               pragmaDefineExport,
+              generateExportId(),
               uniqueName,
               identifier,
               exportedIdentifier
@@ -98,7 +103,8 @@ function handleExportedSpecifiers(
   specifiers,
   exportPath,
   pragmaDefineExport,
-  pragmaDefineDefaultExport
+  pragmaDefineDefaultExport,
+  generateExportId
 ) {
   specifiers.map(({ exported, local }) => {
     handleExportedIdentifier(
@@ -108,7 +114,8 @@ function handleExportedSpecifiers(
         ? pragmaDefineDefaultExport
         : pragmaDefineExport,
       exported,
-      local
+      local,
+      generateExportId
     )
   })
 
@@ -120,7 +127,8 @@ module.exports = function reassignAndReexportExport(
   exportPath,
   maybeNode,
   pragmaDefineExport,
-  pragmaDefineDefaultExport
+  pragmaDefineDefaultExport,
+  generateExportId
 ) {
   return maybeNode
     .flatMap(node => Maybe.fromNull(node.specifiers))
@@ -131,7 +139,8 @@ module.exports = function reassignAndReexportExport(
         specifiers,
         exportPath,
         pragmaDefineExport,
-        pragmaDefineDefaultExport
+        pragmaDefineDefaultExport,
+        generateExportId
       )
 
       return exportPath

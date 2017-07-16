@@ -1,3 +1,3 @@
-export default gio.defineDefaultExport('defaultExport', function () {
+export default gio.defineDefaultExport(0, 'defaultExport', function () {
   return 'Redundant file';
 });

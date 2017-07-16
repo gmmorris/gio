@@ -5,7 +5,7 @@ const { Maybe } = monet
 const spiedExport = pragma =>
   template(
     `
-    export const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
+    export const EXPORT_IDENTIFIER = ${pragma}(EXPORT_ID, EXPORT_NAME, EXPORTED_IDENTIFIER);
     `,
     { sourceType: 'module' }
   )
@@ -55,6 +55,7 @@ const exportSpiedExport = (
   t,
   exportPath,
   pragmaDefineExport,
+  id,
   uniqueName,
   exportIdentifier,
   exportName = exportIdentifier
@@ -62,11 +63,13 @@ const exportSpiedExport = (
   const EXPORTED_IDENTIFIER = uniqueName
   const EXPORT_IDENTIFIER = exportIdentifier
   const EXPORT_NAME = t.stringLiteral(exportName.name)
+  const EXPORT_ID = t.numericLiteral(id)
 
   return spiedExport(pragmaDefineExport)({
     EXPORTED_IDENTIFIER,
     EXPORT_IDENTIFIER,
-    EXPORT_NAME
+    EXPORT_NAME,
+    EXPORT_ID
   })
 }
 
@@ -114,7 +117,7 @@ const mergeDeclarations = (t, declarations, kind) => [
   mergeVariables(t, declarations.variables, kind)
 ]
 
-const applyReassignDeclaration = (t, dec, exportPath, pragmaDefineExport) => {
+const applyReassignDeclaration = (t, dec, exportPath, pragmaDefineExport, generateExportId) => {
   const { id, declaration } = dec
   const uniqueName = exportPath.scope.generateUidIdentifier(id.name)
 
@@ -126,10 +129,10 @@ const applyReassignDeclaration = (t, dec, exportPath, pragmaDefineExport) => {
       uniqueName,
       declaration
     ),
-    exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+    exportSpiedExport(t, exportPath, pragmaDefineExport, generateExportId(), uniqueName, id)
   ]
 }
-const applyReassignExpression = (t, dec, exportPath, pragmaDefineExport) => {
+const applyReassignExpression = (t, dec, exportPath, pragmaDefineExport, generateExportId) => {
   const { id, declaration } = dec
   const uniqueName = exportPath.scope.generateUidIdentifier(id.name)
 
@@ -141,7 +144,7 @@ const applyReassignExpression = (t, dec, exportPath, pragmaDefineExport) => {
       uniqueName,
       declaration
     ),
-    exportSpiedExport(t, exportPath, pragmaDefineExport, uniqueName, id)
+    exportSpiedExport(t, exportPath, pragmaDefineExport, generateExportId(), uniqueName, id)
   ]
 }
 
@@ -149,7 +152,8 @@ function handleExportedDeclaration(
   t,
   declaration,
   exportPath,
-  pragmaDefineExport
+  pragmaDefineExport,
+  generateExportId
 ) {
   const insertDeclerationsAndRemoveOriginalDeclaration = declerations => {
     declerations.forEach(declaration => {
@@ -161,7 +165,7 @@ function handleExportedDeclaration(
 
   isExportedFunctionDeclaration(t, declaration)
     .map(declaration =>
-      applyReassignDeclaration(t, declaration, exportPath, pragmaDefineExport)
+      applyReassignDeclaration(t, declaration, exportPath, pragmaDefineExport, generateExportId)
     )
     .map(insertDeclerationsAndRemoveOriginalDeclaration)
 
@@ -173,7 +177,8 @@ function handleExportedDeclaration(
             t,
             declaration,
             exportPath,
-            pragmaDefineExport
+            pragmaDefineExport,
+            generateExportId
           )
           return {
             exports: declarations.exports.concat(
@@ -200,7 +205,9 @@ module.exports = function reassignAndReexportExport(
   t,
   exportPath,
   maybeNode,
-  pragmaDefineExport
+  pragmaDefineExport,
+  pragmaDefineDefaultExport,
+  generateExportId
 ) {
   return maybeNode
     .flatMap(node => Maybe.fromNull(node.declaration))
@@ -209,7 +216,8 @@ module.exports = function reassignAndReexportExport(
         t,
         declaration,
         exportPath,
-        pragmaDefineExport
+        pragmaDefineExport,
+        generateExportId
       )
       return exportPath
     })

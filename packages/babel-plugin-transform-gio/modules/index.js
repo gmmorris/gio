@@ -60,6 +60,10 @@ module.exports = function(babel) {
           scope.rename(getPragmaRoot(pragma))
 
           const gioSurvey = surverySource(path)
+          
+          const generateExportId = (function(id = 0){
+            return () => id++
+          })()
 
           gioSurvey.hasExports =
             gioSurvey.exports.isSome() || gioSurvey.defaultExport.isSome()
@@ -70,7 +74,8 @@ module.exports = function(babel) {
                 reassignAndReexportDefaultExport(
                   t,
                   exportPath,
-                  pragmaDefineDefaultExport
+                  pragmaDefineDefaultExport,
+                  generateExportId
                 )
               )
 
@@ -84,14 +89,16 @@ module.exports = function(babel) {
                       exportPath,
                       maybeNode,
                       pragmaDefineExport,
-                      pragmaDefineDefaultExport
+                      pragmaDefineDefaultExport,
+                      generateExportId
                     )
                     reassignAndReexportNamedSpecifierExport(
                       t,
                       exportPath,
                       maybeNode,
                       pragmaDefineExport,
-                      pragmaDefineDefaultExport
+                      pragmaDefineDefaultExport,
+                      generateExportId
                     )                    
                   }
                 })

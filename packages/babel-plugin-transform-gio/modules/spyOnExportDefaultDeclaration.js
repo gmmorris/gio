@@ -8,14 +8,14 @@ const {
 } = require('./scope')
 
 const spiedDefaultExpressionExport = pragma =>
-  template(` export default (${pragma}(EXPORT_NAME, EXPORTED_EXPRESSION));`, {
+  template(` export default (${pragma}(EXPORT_ID, EXPORT_NAME, EXPORTED_EXPRESSION));`, {
     sourceType: 'module'
   })
 
 const spiedDefaultExport = pragma =>
   template(
     `
-  const EXPORT_IDENTIFIER = ${pragma}(EXPORT_NAME, EXPORTED_IDENTIFIER);
+  const EXPORT_IDENTIFIER = ${pragma}(EXPORT_ID, EXPORT_NAME, EXPORTED_IDENTIFIER);
   export default EXPORT_IDENTIFIER;
 `,
     { sourceType: 'module' }
@@ -37,13 +37,16 @@ const createSpiedDefaultExport = (
   t,
   pragmaDefineExport,
   uniqueName,
-  exportName
+  exportName,
+  id
 ) => {
   const EXPORTED_IDENTIFIER = uniqueName
   const EXPORT_IDENTIFIER = exportName
   const EXPORT_NAME = t.stringLiteral(exportName.name)
+  const EXPORT_ID = t.numericLiteral(id)
 
   return spiedDefaultExport(pragmaDefineExport)({
+    EXPORT_ID,
     EXPORTED_IDENTIFIER,
     EXPORT_IDENTIFIER,
     EXPORT_NAME
@@ -54,14 +57,17 @@ const createSpiedDefaultExpressionExport = (
   t,
   pragmaDefineExport,
   decleration,
-  exportName
+  exportName,
+  id
 ) => {
   const EXPORTED_EXPRESSION = decleration
   const EXPORT_NAME = t.stringLiteral(exportName.name)
+  const EXPORT_ID = t.numericLiteral(id)
 
   return spiedDefaultExpressionExport(pragmaDefineExport)({
     EXPORTED_EXPRESSION,
-    EXPORT_NAME
+    EXPORT_NAME,
+    EXPORT_ID
   })
 }
 
@@ -69,7 +75,8 @@ function handleExportedDeclaration(
   t,
   exportPath,
   pragmaDefineExport,
-  functionDeclaration
+  functionDeclaration,
+  generateExportId
 ) {
   return Maybe.Some(functionDeclaration)
     .map(functionDeclaration => {
@@ -93,7 +100,7 @@ function handleExportedDeclaration(
       )
 
       exportPath.insertAfter(
-        createSpiedDefaultExport(t, pragmaDefineExport, uniqueName, identifier)
+        createSpiedDefaultExport(t, pragmaDefineExport, uniqueName, identifier, generateExportId())
       )
 
       return functionDeclaration
@@ -104,7 +111,8 @@ function handleExportedExpression(
   t,
   exportPath,
   pragmaDefineExport,
-  functionExpression
+  functionExpression,
+  generateExportId
 ) {
   return Maybe.Some(functionExpression).map(functionExpression => {
     const identifier = getIdentifierForDeclaredDefaultExport(t, exportPath)
@@ -113,7 +121,8 @@ function handleExportedExpression(
         t,
         pragmaDefineExport,
         functionExpression,
-        identifier
+        identifier,
+        generateExportId()
       )
     )
 
@@ -125,7 +134,8 @@ function handleExportedIdentifier(
   t,
   exportPath,
   pragmaDefineExport,
-  exportedIdentifier
+  exportedIdentifier,
+  generateExportId
 ) {
   return Maybe.Some(exportedIdentifier)
     .flatMap(identifier =>
@@ -170,7 +180,13 @@ function handleExportedIdentifier(
       }
 
       exportPath.insertAfter(
-        createSpiedDefaultExport(t, pragmaDefineExport, uniqueName, identifier)
+        createSpiedDefaultExport(
+          t,
+          pragmaDefineExport,
+          uniqueName,
+          identifier,
+          generateExportId()
+        )
       )
 
       exportPath.remove()
@@ -181,7 +197,8 @@ function handleExportedIdentifier(
 module.exports = function reassignAndReexportDefaultExport(
   t,
   exportPath,
-  pragmaDefineExport
+  pragmaDefineExport,
+  generateExportId
 ) {
   const declaration = Maybe.fromNull(exportPath.node.declaration)
 
@@ -192,7 +209,8 @@ module.exports = function reassignAndReexportDefaultExport(
         t,
         exportPath,
         pragmaDefineExport,
-        functionDeclaration
+        functionDeclaration,
+        generateExportId
       )
     )
 
@@ -203,7 +221,8 @@ module.exports = function reassignAndReexportDefaultExport(
         t,
         exportPath,
         pragmaDefineExport,
-        functionExpression
+        functionExpression,
+        generateExportId
       )
     )
 
@@ -214,7 +233,8 @@ module.exports = function reassignAndReexportDefaultExport(
         t,
         exportPath,
         pragmaDefineExport,
-        exportedIdentifier
+        exportedIdentifier,
+        generateExportId
       )
     )
 
