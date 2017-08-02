@@ -15,6 +15,9 @@ export default function requireSourceAsModule(
 	const moduleFromSource = new ModuleInstanciator(filename, getParent())
 	moduleFromSource.filename = filename
 	moduleFromSource.paths = getModulePaths(getDirectoryByFilename(filename))
-	moduleFromSource._compile(code, filename)
-	return moduleFromSource.exports
+	
+	return () => {
+    moduleFromSource._compile(code, filename)
+    return moduleFromSource.exports
+  }
 }

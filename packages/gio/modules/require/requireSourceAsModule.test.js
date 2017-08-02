@@ -35,12 +35,15 @@ describe('requireSourceAsModule', function() {
             ).to.equal(
               paths
             )
+            return {
+              exports: {}
+            }
           } 
         }
       )
     } 
 
-    const module = requireSourceAsModule('', filename, { ModuleInstanciator, getDirectoryByFilename, getModulePaths })
+    const moduleExecutor = requireSourceAsModule('', filename, { ModuleInstanciator, getDirectoryByFilename, getModulePaths })
     
     expect(
       getDirectoryByFilename.withArgs(filename).calledOnce
@@ -49,6 +52,7 @@ describe('requireSourceAsModule', function() {
     expect(
       getModulePaths.withArgs(dir).calledOnce
     ).to.be.true
+
   })
 
   it('should compile the source and return the compiled exports', function() {
@@ -69,14 +73,16 @@ describe('requireSourceAsModule', function() {
       return module
     } 
 
-    const returnedExports = requireSourceAsModule(source, filename, { ModuleInstanciator })
+    const moduleExecutor = requireSourceAsModule(source, filename, { ModuleInstanciator })
     
+    const compiledModule = moduleExecutor()
+
     expect(
       module._compile.withArgs(source, filename).calledOnce
     ).to.be.true
-
+    
     expect(
-      returnedExports
+      compiledModule
     ).to.deep.equal(
       expectedExports
     )

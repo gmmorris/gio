@@ -7,7 +7,7 @@ import { spy } from 'sinon'
 describe('resolve', function() {
   it('should take a string and resolve it using the standard node Require resolution', function() {
     expect(
-      resolve('./fixtures/testFile.js')
+      resolve('../../fixtures/testFile.js')
     ).to.equal(
 `import readFile from 'fs';
 console.log(readFile('.'));`
