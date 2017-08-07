@@ -11,8 +11,8 @@ export function resolve (module) {
   )
 }
 
-export function transform (code, transform = babel.transform, gioPlugin = babelTransformGio) {
-  return transform(code, {
+export function transform (code, babelTransform = babel.transform, gioPlugin = babelTransformGio) {
+  return babelTransform(code, {
       plugins: [
         gioPlugin(babel)
       ]
