@@ -1,7 +1,7 @@
 import augmentModuleExports from './augmentModuleExports'
 import { interceptDefaultExport, interceptExport } from './interceptExport'
 
-function withArgs(fn, args) {
+export function withArgs(fn, args) {
   return (argsObject = {}) => fn({ ...args, ...argsObject })
 }
 
