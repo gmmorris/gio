@@ -1,7 +1,7 @@
 import { expect } from 'chai'
-import { withArgs } from './index'
+import { partialNamedArg } from './index'
 
-describe('withArgs', function() {
+describe('partialNamedArg', function() {
   it(`takes a function with an named object argument and an object argument, and partially applies any prop in the object on the function`, function() {
     function fn (args) {
       expect(
@@ -20,7 +20,7 @@ describe('withArgs', function() {
       )
     }
 
-    withArgs(fn, { a: 1 })({ b: 2 })
+    partialNamedArg(fn, { a: 1 })({ b: 2 })
   })
 
   it(`uses the original object as a default only`, function() {
@@ -41,6 +41,6 @@ describe('withArgs', function() {
       )
     }
 
-    withArgs(fn, { a: 1 })({ b: 2, a: 3 })
+    partialNamedArg(fn, { a: 1 })({ b: 2, a: 3 })
   })
 })
