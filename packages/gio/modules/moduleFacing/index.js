@@ -1,15 +1,10 @@
 import augmentModuleExports from './augmentModuleExports'
 import { interceptDefaultExport, interceptExport } from './interceptExport'
 
-export function partialNamedArg(fn, args) {
-  return (argsObject = {}) => fn({ ...args, ...argsObject })
+const gio = {
+  export: augmentModuleExports,
+  defineDefaultExport: interceptDefaultExport,
+  defineExport: interceptExport
 }
 
-export default function createGioAPI() {
-  const visitors = {}
-  return {
-    export: partialNamedArg(augmentModuleExports, { visitors }),
-    defineDefaultExport: partialNamedArg(interceptDefaultExport, { visitors }),
-    defineExport: partialNamedArg(interceptExport, { visitors })
-  }
-}
+export default gio

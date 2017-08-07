@@ -11,7 +11,7 @@ export function installVisitors (visitorsContainer, visitors = {}){
     //   })
 }
 
-export default function ({ visitors, moduleExports, visitorInstaller = installVisitors }){
+export default function (moduleExports, visitors, visitorInstaller = installVisitors){
   if(typeof moduleExports !== 'object') {
     throw new Error('An invalid module export has been encountered. Are you sure this module is using valid ES Module syntax?')
   }
