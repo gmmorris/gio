@@ -8,7 +8,7 @@ const reassignAndReexportNamedSpecifierExport = require('./spyOnExportNamedSpeci
 const surverySource = require('./surveySource')
 
 const DEFAULTS = {
-  pragma: 'gio.stub',
+  pragma: 'gio',
   pragmaExport: 'gio.export',
   pragmaDefineExport: 'gio.defineExport',
   pragmaDefineDefaultExport: 'gio.defineDefaultExport',
