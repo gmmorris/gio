@@ -5,11 +5,11 @@ import { spy } from 'sinon'
 
 describe('augmentModuleExports', function() {
   it('takes an exported object and augments it with the installVisitors function', function() {
-    const exportedObject = {}
     const visitorContainter = {}
+    const exportedObject = {}
     const visitorInstaller  = spy()
 
-    augmentModuleExports(exportedObject, visitorContainter, visitorInstaller)
+    augmentModuleExports(visitorContainter, exportedObject, visitorInstaller)
 
     expect(
       exportedObject._gioInstallVisitors
@@ -30,7 +30,7 @@ describe('augmentModuleExports', function() {
 
   it(`throws if a non object is provided as the module's exports`, function() {
     expect(
-      () => augmentModuleExports()
+      () => augmentModuleExports({})
     ).to.throw(
       /An invalid module export has been encountered. Are you sure this module is using valid ES Module syntax\?/
     )
@@ -38,7 +38,7 @@ describe('augmentModuleExports', function() {
 
   it(`throws if a non object is provided as the module's exports`, function() {
     expect(
-      () => augmentModuleExports({})
+      () => augmentModuleExports({}, {})
     ).to.not.throw()
   })
 })

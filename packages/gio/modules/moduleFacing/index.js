@@ -1,10 +1,13 @@
+import partial from 'lodash.partial'
+
 import augmentModuleExports from './augmentModuleExports'
 import { interceptDefaultExport, interceptExport } from './interceptExport'
 
-const gio = {
-  export: augmentModuleExports,
-  defineDefaultExport: interceptDefaultExport,
-  defineExport: interceptExport
+export default function createGioAPI() {
+  const visitors = {}
+  return {
+    export: partial(augmentModuleExports)(visitors),
+    defineDefaultExport: partial(interceptDefaultExport)(visitors),
+    defineExport: partial(interceptExport)(visitors)
+  }
 }
-
-export default gio
