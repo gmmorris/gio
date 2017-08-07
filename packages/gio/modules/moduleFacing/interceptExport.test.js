@@ -19,7 +19,6 @@ describe('interceptExport', function() {
   })
 
   it(`passes the arguments to the wrapped function`, function() {
-    const returnValue = {}
 
     function exportFunction() {
       return [...arguments]
@@ -64,9 +63,7 @@ describe('interceptDefaultExport', function() {
     )
   })
 
-  it(`passes the arguments to the wrapped function`, function() {
-    const returnValue = {}
-
+  it(`passes the arguments to the wrapped function`, function() {    
     function exportFunction() {
       return [...arguments]
     }
