@@ -1,14 +1,5 @@
 export function installVisitors (visitorsContainer, visitors = {}){
   Object.assign(visitorsContainer, visitors)
-    // Object.keys(exports)
-    //   .filter(exportName => typeof exports[exportName] === 'function')
-    //   .forEach(exportName => {
-    //     exports[exportName] =
-    //       _spyExport(
-    //         exports[exportName],
-    //         callExport.bind(this, exportName)
-    //       )
-    //   })
 }
 
 export default function (visitors, moduleExports, visitorInstaller = installVisitors){
