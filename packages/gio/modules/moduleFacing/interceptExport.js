@@ -1,7 +1,7 @@
-export function interceptDefaultExport() {
+export function interceptDefaultExport({ visitors }) {
 
 }
 
-export function interceptExport() {
+export function interceptExport({ visitors }) {
 
 }
