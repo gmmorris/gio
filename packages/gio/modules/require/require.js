@@ -1,7 +1,9 @@
-import resolvePath from 'resolve'
 import fs from 'fs'
+import path from 'path'
 import { promisify } from 'util'
+
 import * as babel from 'babel-core'
+import resolvePath from 'resolve'
 import babelTransformGio from 'babel-plugin-transform-gio'
 import findUp from 'find-up'
 
@@ -13,15 +15,14 @@ const log = cb => (...args) => {
 const readFileAsync = promisify(fs.readFile)
 const resolvePathAsync = promisify(resolvePath)
 
-export function resolve (module) {
-  return resolvePathAsync(module, { basedir: process.cwd() })
+export function resolve (module, basedir = process.cwd()) {
+  return resolvePathAsync(module, { basedir })
     .then(path => readFileAsync(
       path,
       { encoding: 'utf8' }
     ))  
 }
-// ./node_modules/.bin/babel-node -e "const mod = require('./modules/require/require'); mod.resolve('./fixtures/testFile.js').then(c => console.log(c));"
-// node -e "const mod = require('./modules/require/require'); mod.resolve('./fixtures/testFile.js').then(c => console.log(c));"
+
 function rejectNone(msg) {
   return function (value) {
     if(!value) {
@@ -31,8 +32,8 @@ function rejectNone(msg) {
   }
 }
 
-export function resolveConfig (babelConfigFilename = '.babelrc', debug = console) {
-  return findUp(babelConfigFilename)
+export function resolveConfig (basedir = process.cwd(), babelConfigFilename = '.babelrc', debug = console) {
+  return findUp(babelConfigFilename, { cwd: basedir })
     .then(rejectNone(`Could not locate the configuration file for Babel:${babelConfigFilename}`))
     .then(path => readFileAsync(
       path,

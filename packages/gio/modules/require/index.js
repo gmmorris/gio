@@ -3,16 +3,16 @@ import { resolve, transform, resolveConfig } from './require'
 import requireSourceAsModule from './requireSourceAsModule'
 import augmentWithInterceptionAPI from './augmentWithInterceptionAPI'
 
-function ensureBabelConfig(babelConfig){
+function ensureBabelConfig(babelConfig, relativeTo){
   return babelConfig
     ? Promise.resovle(babelConfig)
-    : resolveConfig()
+    : resolveConfig(relativeTo)
 }
 
-export default function (module, config){
+export default function ({ module, relativeTo, config }){
   return Promise.all([
-      resolve(module),
-      ensureBabelConfig(config)
+      resolve(module, relativeTo),
+      ensureBabelConfig(config, relativeTo)
     ])
     .then(([moduleResolution, config]) => transform(moduleResolution, config))
     .then(transformed => transformed.code)

@@ -1,9 +1,11 @@
-import { expect } from 'chai'
-import { resolve, resolveConfig, transform } from './require'
-import * as babel from 'babel-core'
 import fs from 'fs'
+import path from 'path'
+import { expect } from 'chai'
+import * as babel from 'babel-core'
 import resolvePath from 'resolve'
 import { spy } from 'sinon'
+
+import { resolve, resolveConfig, transform } from './require'
 
 describe('resolve', function() {
   it('should take a string and resolve it using the standard node Require resolution', function() {
@@ -33,11 +35,12 @@ describe('resolveConfig', function() {
       expect(
         result
       ).to.deep.equal(
-        JSON.parse(
-          fs.readFileSync(
-            resolvePath.sync('../../.babelrc')
-          )
-        )
+        {
+          "presets": [
+            "es2015", "es2016"
+          ],
+          "plugins": ["transform-object-rest-spread"]
+        }
       )
     })
   })
@@ -47,7 +50,7 @@ describe('resolveConfig', function() {
       warn: spy()
     }
 
-    return resolveConfig('.madeUpConfig', mockConsole)
+    return resolveConfig(__dirname, '.madeUpConfig', mockConsole)
     .then(result => {
       expect(
         result
@@ -60,6 +63,23 @@ describe('resolveConfig', function() {
           'Error: Could not locate the configuration file for Babel:.madeUpConfig'
         )
       ).to.be.true
+    })
+  })
+
+  it('should resovle with a config from another base path if a base isspecified', function() {
+    const mockConsole = {
+      warn: spy()
+    }
+
+    return resolveConfig(path.join(__dirname,'../../fixtures/temp'), '.fakeBabelrc')
+    .then(result => {
+      expect(
+        result
+      ).to.deep.equal(
+        {
+          plugins: ['es2054']
+        }
+      )
     })
   })
 })
