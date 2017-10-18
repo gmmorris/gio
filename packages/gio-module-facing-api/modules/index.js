@@ -1,7 +1,7 @@
 import augmentModuleExports from './augmentModuleExports'
 import { interceptDefaultExport, interceptExport } from './interceptExport'
 
-export default function createGioAPI() {
+function createGioAPI() {
   const visitors = {}
   return {
     export: augmentModuleExports.bind(undefined, visitors),
@@ -9,3 +9,5 @@ export default function createGioAPI() {
     defineExport: interceptExport.bind(undefined, visitors)
   }
 }
+
+export default createGioAPI()

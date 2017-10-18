@@ -76,11 +76,11 @@ describe('wrapModuleExports', function() {
     }
 
     expect(
-      wrapModuleExports(moduleExports, () => ({}), '_gioInstallVisitors')
+      wrapModuleExports(moduleExports, (key) => ({ key }), '_gioInstallVisitors')
     ).to.deep.equal(
       {
-        oneMethod: { },
-        default: { }
+        oneMethod: { key: 'oneMethod' },
+        default: { key: 'default' }
       }
     )
   })

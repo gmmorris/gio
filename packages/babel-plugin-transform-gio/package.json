@@ -6,9 +6,10 @@
   "license": "MIT",
   "main": "lib/index.js",
   "scripts": {
+    "clean": "rimraf ./node_modules ./lib/* && npm i",
+    "build": "babel modules -d lib --ignore .test.js",
     "test": "mocha --opts test/mocha.opts 'test/index.js'",
     "testD": "mocha --opts test/mocha.opts --inspect --debug-brk 'test/index.js'",
-    "build": "babel modules -d lib --ignore .test.js",
     "lint": "eslint ./modules/**/*.js"
   },
   "author": "Gidi Meir Morris <gidi@gidi.io>",
